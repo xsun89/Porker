@@ -4,6 +4,7 @@
 #include <time.h>
 
 #define CARD_COUNT 54
+#define PLAYER_COUNT 3
 
 typedef enum Suit{
     heart,
@@ -19,10 +20,19 @@ typedef struct Card{
     Suit suit;
 }Card;
 
+typedef struct Player{
+    char name[30];
+    Card** myCard;
+    int cardCount;
+}Player;
+typedef int (*COMPARE)(Card*, Card*);
 void getCardName(const Card* card, char* ret);
 void shaffle(const Card* card, Card** shaffledCard);
 void printCard(const Card* card);
 void printPCard(const Card** pcard);
+void dispatchCard(Player* players, Card** pCard);
+int comp1(Card*, Card*);
+void sort(Card** poker, int count, COMPARE);
 int main() {
     Card card[CARD_COUNT];
     int i = 0;
@@ -40,9 +50,69 @@ int main() {
 
     Card** shaffled = (Card**)malloc(CARD_COUNT*sizeof(Card*));
     shaffle(card, shaffled);
-    printPCard((const Card**)shaffled);
+    //printPCard((const Card**)shaffled);
+    Player player[PLAYER_COUNT];
+    for(i=0; i<PLAYER_COUNT;i++) {
+        player[i].cardCount = 0;
+        player[i].myCard = (Card**)malloc(CARD_COUNT/PLAYER_COUNT*sizeof(Card*));
+        memset(player[i].name, '\0', sizeof(player[i].name));
+        sprintf(player[i].name, "PLAYER%d", i);
+    }
+    dispatchCard(player, shaffled);
+    for(i=0; i<PLAYER_COUNT; i++){
+        sort(player[i].myCard, player[i].cardCount, comp1);
+    }
+    for(i=0; i<PLAYER_COUNT;i++){
+        printf("Player: %s\n", player[i].name);
+        int j;
+        for(j=0; j<player[i].cardCount; j++){
+            char* ret = (char *)malloc(16);
+            getCardName(player[i].myCard[j], ret);
+            printf("%s\n", ret);
+            free(ret);
+        }
+        printf("\n");
+    }
+    for(i=0; i<PLAYER_COUNT;i++) {
+        player[i].cardCount = 0;
+        free(player[i].myCard);
+    }
+    free(shaffled);
 
     return 0;
+}
+int comp1(Card* c1, Card* c2){
+    int ret = -1;
+    if(c1->value > c2->value){
+        ret = 1;
+    }else if(c1->value == c2->value){
+        if(c1->suit >c2->suit){
+            ret = 1;
+        }else if(c1->suit== c2->suit){
+            ret = 0;
+        }
+    }
+    return ret;
+}
+void sort(Card** poker, int count, COMPARE compare){
+    int i, j;
+    for(i=0; i<count-1; i++){
+        for(j=i+1; j<count; j++){
+            if(compare(poker[i], poker[j]) < 0){
+                Card* tmp = poker[i];
+                poker[i] = poker[j];
+                poker[j] = tmp;
+            }
+        }
+    }
+}
+void dispatchCard(Player* players, Card** pCard){
+    int i;
+    for (int i = 0; i < CARD_COUNT; ++i) {
+        players[i%PLAYER_COUNT].myCard[players[i%PLAYER_COUNT].cardCount] = pCard[i];
+        players[i%PLAYER_COUNT].cardCount++;
+    }
+
 }
 
 void printCard(const Card* card){
