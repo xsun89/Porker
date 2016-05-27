@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+
+#define CARD_COUNT 54
 
 typedef enum Suit{
     heart,
@@ -18,25 +21,48 @@ typedef struct Card{
 
 void getCardName(const Card* card, char* ret);
 void shaffle(const Card* card, Card** shaffledCard);
+void printCard(const Card* card);
+void printPCard(const Card** pcard);
 int main() {
-    Card card[54];
+    Card card[CARD_COUNT];
     int i = 0;
-    for(; i<52; i++){
+    for(; i<CARD_COUNT- 2; i++){
         card[i].value = i/4 + 1;
         card[i].suit = static_cast<Suit>(i % 4);
     }
 
-    card[52].value = 14;
-    card[52].suit = (Suit)4;
-    card[53].value = 15;
-    card[53].suit = (Suit)5;
-    for(i=0; i<54; i++){
+    card[CARD_COUNT-2].value = 14;
+    card[CARD_COUNT-2].suit = (Suit)4;
+    card[CARD_COUNT-1].value = 15;
+    card[CARD_COUNT-1].suit = (Suit)5;
+
+    //printCard(card);
+
+    Card** shaffled = (Card**)malloc(CARD_COUNT*sizeof(Card*));
+    shaffle(card, shaffled);
+    printPCard((const Card**)shaffled);
+
+    return 0;
+}
+
+void printCard(const Card* card){
+    int i;
+    for(i=0; i<CARD_COUNT; i++){
         char* ret = (char *)malloc(16);
         getCardName(&card[i], ret);
         printf("%s\n", ret);
         free(ret);
     }
-    return 0;
+}
+
+void printPCard(const Card** pCard){
+    int i;
+    for(i=0; i<CARD_COUNT; i++){
+        char* ret = (char *)malloc(16);
+        getCardName(pCard[i], ret);
+        printf("%s\n", ret);
+        free(ret);
+    }
 }
 
 void getCardName(const Card* card, char* ret){
@@ -87,4 +113,22 @@ void getCardName(const Card* card, char* ret){
 
 void shaffle(const Card* card, Card** shaffledCard){
 
+    Card** copiedCard = (Card**)malloc(CARD_COUNT*sizeof(Card*));
+
+    int i = 0;
+    for (int i = 0; i < CARD_COUNT; ++i) {
+        copiedCard[i] = (Card *) &(card[i]);
+    }
+
+    srand(time(NULL));
+    for(i=0; i<CARD_COUNT;i++){
+        int index = rand()%CARD_COUNT;
+        if(copiedCard[index] != NULL) {
+            shaffledCard[i] = copiedCard[index];
+            copiedCard[index] = NULL;
+        }else{
+            i--;
+        }
+    }
+    free(copiedCard);
 }
